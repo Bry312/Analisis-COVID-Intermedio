@@ -2,7 +2,14 @@
 title: "Analisis de datos COVID Intermedio"
 author: "Bryan Ramirez"
 date: '2022-05-25'
-output: html_document
+output:
+  html_document:
+    theme: readable    
+    toc: true
+    toc_depth: 5
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
 ---
 
 ```{r setup, include=FALSE}
@@ -31,6 +38,27 @@ plot(pressure)
 
 ## Entradas
 
+```{r Importación de datos nacionales de covid-19}
+covid_nacional <-
+  read_delim(
+    file = "C:/Users/gf0604-1/Git/Analisis-COVID-Intermedio/05_24_22_CSV_GENERAL.csv",
+    delim = ";",
+    col_select = c("FECHA", "positivos", "fallecidos", "RECUPERADOS", "activos")
+  )
+```
+
+```{r Transformación de datos nacionales de covid-19}
+covid_nacional <-
+  covid_nacional %>%
+  select(fecha = FECHA,
+         positivos,
+         fallecidos,
+         recuperados = RECUPERADOS,
+         activos) %>%
+  mutate(fecha = as.Date(fecha, format = "%d/%m/%Y"))
+```
+
+
 ## Procesamiento
 
 ## Datos generales de casos
@@ -43,9 +71,74 @@ plot(pressure)
 
 ### casos acumulados a nivel nacional
 
+```{r}
+plot(
+  covid_nacional$fecha,
+  covid_nacional$positivos,
+  type = "l",
+  xaxt = "n",
+  yaxt = "n",
+  main = "Casos acumulados de covid-19 en Costa Rica",
+  xlab = "Fecha",
+  ylab = "Casos",
+  col = "blue"
+)
+lines(covid_nacional$fecha, covid_nacional$recuperados, col="green")
+lines(covid_nacional$fecha, covid_nacional$activos, col="red")
+lines(covid_nacional$fecha, covid_nacional$fallecidos, col="black")
+```
+
+
 #### Tabla
 
+```{r}
+covid_nacional %>%
+  datatable(options = list(
+    pageLength = 5,
+    language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
+  ))
+```
+
+
 #### Grafico de lineas
+
+```{r plotly - gráfico de línea}
+covid_nacional %>%
+  plot_ly(
+    x = ~ fecha,
+    y = ~ positivos,
+    name = 'Positivos',
+    type = 'scatter',
+    mode = 'lines',
+    line = list(color = "blue")
+  ) %>%
+  add_trace(
+    y = ~ recuperados,
+    name = 'Recuperados',
+    mode = 'lines',
+    line = list(color = "green")
+  ) %>%
+  add_trace(
+    y = ~ activos,
+    name = 'Activos',
+    mode = 'lines',
+    line = list(color = "red")
+  ) %>%
+  add_trace(
+    y = ~ fallecidos,
+    name = 'Fallecidos',
+    mode = 'lines',
+    line = list(color = "black")
+  ) %>%
+  layout(
+    title = "",
+    yaxis = list(title = "Casos"),
+    xaxis = list(title = "Fecha"),
+    legend = list(x = 0.1, y = 0.9),
+    hovermode = "compare"
+  )
+```
+
 
 #### Capas a nivel cantonal
 
